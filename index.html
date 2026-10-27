@@ -773,10 +773,18 @@ function addNPC(spec,t,side,dist,along,chunk){const P=makePerson(spec);P.root.sc
   P.root.position.set(x,groundY(toS(x,z),toW(x,z))-0.02,z);P.root.rotation.y=-Math.PI/4-side*0.75;P.t=t;mergePerson(P,true);CHUNKS[chunk!=null?chunk:biomeAtT(t)].add(P.root);reserveCirc(toS(x,z),toW(x,z),0.9);NPCS.push(P);return P;}
 const GLABELS=[];
 function andJoin(a){return a.length<2?a[0]:a.slice(0,-1).join(', ')+' i '+a[a.length-1];}
-function addGroup(members,t,side,chunk){const n=members.length;const ps=members.map(([nm,o],q)=>addNPC(P_(nm,o),t,side,2.3,(q-(n-1)/2)*0.95,chunk));
-  let cx=0,cz=0;for(const P of ps){cx+=P.root.position.x;cz+=P.root.position.z;}cx/=n;cz/=n;const text=andJoin(members.map(m=>m[0]));const L=labelTex(text);
-  const m=new THREE.SpriteMaterial({map:L.t,transparent:true,opacity:0,depthWrite:false,depthTest:false});const sp=new THREE.Sprite(m);const w=Math.min(5.4,0.19*L.chars+1.0);sp.scale.set(w,w*L.aspect,1);sp.renderOrder=20;
-  const top=Math.max(...ps.map(P=>P.body.scale.y))*1.45*1.95+0.6;sp.position.set(cx,top+w*L.aspect/2-0.4,cz);CHUNKS[chunk!=null?chunk:biomeAtT(t)].add(sp);GLABELS.push({sp,t});return ps;}
+function addGroup(members,t,side,chunk,labels){const n=members.length;const ps=members.map(([nm,o],q)=>addNPC(P_(nm,o),t,side,2.3,(q-(n-1)/2)*0.95,chunk));
+  const mkLabel=text=>{const L=labelTex(text);const sp=new THREE.Sprite(new THREE.SpriteMaterial({map:L.t,transparent:true,opacity:0,depthWrite:false,depthTest:false}));const w=Math.min(5.4,0.19*L.chars+1.0);sp.scale.set(w,w*L.aspect,1);sp.renderOrder=20;return{sp,w,h:w*L.aspect};};
+  const ch=CHUNKS[chunk!=null?chunk:biomeAtT(t)];const top=Math.max(...ps.map(P=>P.body.scale.y))*1.45*1.95+0.6;
+  let cx=0,cz=0;for(const P of ps){cx+=P.root.position.x;cz+=P.root.position.z;}cx/=n;cz/=n;
+  if(!labels){const l=mkLabel(andJoin(members.map(m=>m[0])));l.sp.position.set(cx,top+l.h/2-0.4,cz);ch.add(l.sp);GLABELS.push({sp:l.sp,t});return ps;}
+  // several labels side by side in one row across the screen, in the same left-to-right order as the people
+  const row=labels.map(([text,idx])=>{const l=mkLabel(text);l.w*=0.88;l.h*=0.88;l.sp.scale.set(l.w,l.h,1);let w=0;for(const i of idx)w+=toW(ps[i].root.position.x,ps[i].root.position.z);l.at=w/idx.length;return l;}).sort((a,b)=>a.at-b.at);
+  // three labels: the two ends side by side, the middle one just above them (compact enough for a phone)
+  const h=Math.max(...row.map(l=>l.h)),sh=-Math.sign(toW(cx,cz)-pathW(t))*0.8;const place=(l,off,up)=>{l.sp.position.set(cx+IS2*(off+sh),top+h/2-0.4+up,cz+IS2*(off+sh));ch.add(l.sp);GLABELS.push({sp:l.sp,t});};
+  if(row.length===3){const g=0.45;place(row[0],-(g/2+row[0].w/2),0);place(row[2],g/2+row[2].w/2,0);place(row[1],0,h+0.06);}
+  else{const gap=0.16,tot=row.reduce((a,l)=>a+l.w,0)+gap*(row.length-1);let x=-tot/2;for(const l of row){place(l,x+l.w/2,0);x+=l.w+gap;}}
+  return ps;}
 function buildCast(){
   // heroes
   CAST.lomaKid=makePerson(SPEC.lomaKid);CAST.lomaAdult=makePerson(SPEC.lomaAdult);CAST.jordi=makePerson(SPEC.jordi);
@@ -792,7 +800,7 @@ function buildCast(){
   // Igualada: friends at 20
   [[131.5,-1],[141.6,1],[152.3,-1]].forEach(([t,side],i)=>{addGroup([0,1].map(q=>{const [n,o]=FRIENDS[i*2+q];return[n,Object.assign({age:'adult'},o)];}),t,side);});
   // Castellbisbal: the family today
-  const T0=183.0,T1=222.0;FAMILY.forEach((grp,gi)=>{const t=lerp(T0,T1,gi/(FAMILY.length-1));addGroup(grp,t,gi%2?1:-1,6);});
+  const T0=183.0,T1=222.0;FAMILY.forEach((grp,gi)=>{const t=lerp(T0,T1,gi/(FAMILY.length-1));addGroup(grp,t,gi%2?1:-1,6,grp.some(m=>m[0]==='Sandra')?[['Luis',[0]],['Victor i Aitana',[1,2]],['Sandra',[3]]]:null);});
   buildParade();
 }
 
@@ -1008,7 +1016,9 @@ function updateCamera(dt,t,zoom){
       lo=b-(half-0.75);hi=a+(half-0.75);if(lo>hi){const m=clamp((lo+hi)/2,w-(half-1.6),w+(half-1.6));lo=hi=m;}}
     // name labels of the people waving must fit on screen: they win over lyric signs and landmarks
     const labs=(G.state==='playing'||G.state==='debug')?GLABELS.filter(L=>L.sp.visible&&L.sp.material.opacity>0.3).sort((p,q)=>q.t-p.t):[];
-    labs.forEach((L,i)=>{const lw=toW(L.sp.position.x,L.sp.position.z),hw=L.sp.scale.x/2+0.3;const a1=Math.max(lo,lw+hw-half),b1=Math.min(hi,lw-hw+half);if(a1<=b1){lo=a1;hi=b1;wP=clamp(wP,lo,hi);}else if(i===0)wP=lw>wC?hi:lo;});
+    // labels that belong to the same group (same time) are fitted together as one row
+    const rows=new Map();for(const L of labs){const lw=toW(L.sp.position.x,L.sp.position.z),hw=L.sp.scale.x/2+0.3;const r=rows.get(L.t)||{t:L.t,a:1e9,b:-1e9};r.a=Math.min(r.a,lw-hw);r.b=Math.max(r.b,lw+hw);rows.set(L.t,r);}
+    [...rows.values()].forEach((r,i)=>{const a1=Math.max(lo,r.b-half),b1=Math.min(hi,r.a+half);if(a1<=b1){lo=a1;hi=b1;wP=clamp(wP,lo,hi);}else if(i===0)wP=clamp((r.a+r.b)/2,lo,hi);});
     if(labs.length){}
     else if((G.state==='playing'||G.state==='debug')&&kmax<0.5)for(const r of SIGNS){if(r.act>0.3&&r.grp.visible){const sw=toW(r.grp.position.x,r.grp.position.z);const sl=sw+r.hw-(half-0.15),sh=sw-r.hw+(half-0.15);
       if(Math.max(lo,sl)<=Math.min(hi,sh))wP=clamp(wP,Math.max(lo,sl),Math.min(hi,sh));else wP=sw>wC?hi:lo;break;}}
