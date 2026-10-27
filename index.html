@@ -247,6 +247,7 @@ function seaK(s){let k=0;for(const S of SEAS){const c=smooth(S.s0-1.5,S.s0+2.5,s
 
 /* ---------- Moros i Cristians street (Cocentaina) ---------- */
 const PAR_TC=45.2, PAR_V=0.75;
+const CASTLE_SW={s:15.4,w:6.3}; // Cocentaina castle, seen from the start
 const PARADE=(function(){const sA=sAt(PAR_TC)-12,sB=sAt(PAR_TC)+15;
   for(const off of[3.4,3.6,3.8,4.0,4.2,4.4,4.6,4.8,5.0,5.3,5.6,6.0])for(const side of[-1,1]){const wA=meanW(sA)+side*off,wB=meanW(sB)+side*off;let ok=true;
     for(let k=0;k<=60&&ok;k++){const u=k/60,s=lerp(sA-1.5,sB+1.5,u),w=lerp(wA,wB,clamp((s-sA)/(sB-sA),0,1));for(const dw of[-1.6,0,1.6]){if(distPath(s,w+dw,8)<1.25){ok=false;break;}}}
@@ -314,6 +315,7 @@ function rawHeight(s,w,d){
   const hn=0.5+0.5*noise2(s*0.045,w*0.05);
   h+=(b===0?smooth(2.5,7.5,d)*(1.5+3.4*hn*hn):smooth(3.4,16,d)*(0.3+3.6*hn*hn))*BIO[b].hill;
   const pk=paradeK(s,w);if(pk>0)h=lerp(h,0.0,pk);
+  if(b===0){const ck=smooth(7.0,4.6,Math.hypot(s-CASTLE_SW.s,w-CASTLE_SW.w));if(ck>0)h=lerp(h,0.15,ck);}
   h=lerp(-0.04,h,smooth(PW*0.55,PW*0.55+1.1,d));
   const sk=seaK(s);if(sk>0)h=lerp(h,-2.6,sk);
   const st=streamK(s,w);if(st>0)h=lerp(h,-0.55,st);
@@ -405,7 +407,8 @@ function makePerson(sp){
     cap();
     if(st==='short'||st==='side'){H([0,0.13,0.17],[0.42,0.08,0.08],[-0.25,0,0]);if(st==='side')H([0.08,0.17,0.15],[0.3,0.07,0.12],[0,0,-0.3]);}
     if(st==='curly'||st==='curlyLong'){for(let k=0;k<13;k++){const a=R()*Math.PI*1.5+Math.PI*0.75,y=0.06+R()*0.2;H([Math.sin(a)*0.22,y,Math.cos(a)*0.22],[0.085,0.085,0.085],[R(),R(),R()],GEO.dode);}for(let k=0;k<5;k++)H([R()*0.28-0.14,0.25,R()*0.28-0.16],[0.085,0.07,0.085],[0,R(),0],GEO.dode);for(let k=0;k<4;k++)H([-0.15+k*0.1,0.16,0.17],[0.07,0.06,0.06],[R(),R(),R()],GEO.dode);
-      if(st==='curlyLong')for(let k=0;k<12;k++){const sd=k%2?1:-1;H([sd*(0.1+R()*0.12),-0.06-R()*0.3,-0.1-R()*0.08],[0.085,0.085,0.085],[R(),R(),R()],GEO.dode);}}
+      if(st==='curlyLong'){const HL=sp.hair.len||0.3,n=Math.round(12*HL/0.3);for(let k=0;k<n;k++){const sd=k%2?1:-1;H([sd*(0.08+R()*0.14),-0.06-R()*HL,-0.1-R()*0.09],[0.09,0.09,0.09],[R(),R(),R()],GEO.dode);}
+        if(HL>0.4)for(let k=0;k<8;k++){const sd=k%2?1:-1;H([sd*(0.21+R()*0.04),0.02-(k>>1)*0.1,0.02-R()*0.1],[0.085,0.085,0.085],[R(),R(),R()],GEO.dode);}}}
     if(st==='long'||st==='mid'||st==='wavy'){const L=st==='long'?0.58:st==='mid'?0.4:0.5;H([0,0.12-L/2,-0.17],[0.46,L,0.13]);for(const sd of[-1,1])H([0.215*sd,0.12-L/2+0.04,-0.02],[0.07,L-0.06,0.3]);H([0,0.15,0.18],[0.38,0.08,0.06],[-0.3,0,0]);
       if(st==='wavy')for(let k=0;k<6;k++){const sd=k%2?1:-1;H([sd*0.22,0.05-k*0.07,0.05],[0.09,0.08,0.09],[0,0.5,0]);}}
     if(st==='bob'){for(const sd of[-1,1])H([0.21*sd,-0.03,0.0],[0.07,0.3,0.36]);H([0,-0.03,-0.17],[0.46,0.3,0.12]);H([0,0.15,0.18],[0.38,0.08,0.06],[-0.3,0,0]);}
@@ -444,12 +447,13 @@ function posePerson(P,mode,ph,c){const [lL,lR]=P.legs,[aL,aR]=P.arms;P.body.posi
   if(P.holdL){aR.rotation.z=0.38*P.holdL;aR.rotation.x=-0.12*P.holdL;}
 }
 /* name label above a person */
-function labelTex(text){const c=document.createElement('canvas');const S=64;const x=c.getContext('2d');x.font=`600 ${S}px Fraunces, Georgia, serif`;const tw=x.measureText(text).width;
-  c.width=Math.ceil(tw+70);c.height=100;const g=c.getContext('2d');
+function labelTex(text){const S=64;const m=document.createElement('canvas').getContext('2d');m.font=`600 ${S}px Fraunces, Georgia, serif`;
+  let lines=[text];if(text.length>16&&text.includes(', ')){let best=null;const parts=text.split(', ');for(let i=1;i<parts.length;i++){const l1=parts.slice(0,i).join(', ')+',',l2=parts.slice(i).join(', ');const sc=Math.max(m.measureText(l1).width,m.measureText(l2).width);if(!best||sc<best[0])best=[sc,[l1,l2]];}lines=best[1];}
+  const tw=Math.max(...lines.map(l=>m.measureText(l).width));const c=document.createElement('canvas');c.width=Math.ceil(tw+70);c.height=100+(lines.length-1)*72;const g=c.getContext('2d');
   g.fillStyle='rgba(255,250,240,.95)';const r=40,w=c.width,h=c.height-14;g.beginPath();g.moveTo(r,0);g.arcTo(w,0,w,h,r);g.arcTo(w,h,0,h,r);g.arcTo(0,h,0,0,r);g.arcTo(0,0,w,0,r);g.closePath();g.fill();
   g.beginPath();g.moveTo(w/2-14,h);g.lineTo(w/2,c.height);g.lineTo(w/2+14,h);g.fill();
-  g.fillStyle='#4a2b22';g.textAlign='center';g.textBaseline='middle';g.font=`600 ${S}px Fraunces, Georgia, serif`;g.fillText(text,w/2,h/2+2);
-  const t=noMip(new THREE.CanvasTexture(c));t.anisotropy=4;return{t,aspect:c.height/c.width};}
+  g.fillStyle='#4a2b22';g.textAlign='center';g.textBaseline='middle';g.font=`600 ${S}px Fraunces, Georgia, serif`;lines.forEach((l,i)=>g.fillText(l,w/2,h/2+2+(i-(lines.length-1)/2)*72));
+  const t=noMip(new THREE.CanvasTexture(c));t.anisotropy=4;return{t,aspect:c.height/c.width,chars:Math.max(...lines.map(l=>l.length))};}
 
 /* merge a person's meshes into vertex-coloured meshes (1 for the body + 1 per kept limb) to save draw calls */
 const MAT_VC=new THREE.MeshLambertMaterial({vertexColors:true});
@@ -628,7 +632,9 @@ const FADERS=[];
 function placeLandmark(obj,sc,wc,yaw,chunk,r,poi){reserveCirc(sc,wc,r);const o=fromSW(sc,wc,{});obj.position.set(o.x,groundY(sc,wc)-0.08,o.z);obj.rotation.y=yaw;faceCam(obj);CHUNKS[chunk].add(obj);if(poi!==false)POIS.push({s:sc,w:wc,k:poi||1});
   // tall landmarks turn see-through once they are behind the hero, so they never hide the path
   if(poi!==false)addFader(obj,sc,wc,chunk);}
-function addFader(obj,sc,wc,chunk){const bb=new THREE.Box3().setFromObject(obj);const h=bb.max.y-bb.min.y;if(h<3.4)return;const c=[[bb.min.x,bb.min.z],[bb.max.x,bb.min.z],[bb.min.x,bb.max.z],[bb.max.x,bb.max.z]];let w0=1e9,w1=-1e9,s0=1e9,s1=-1e9;for(const [x,z] of c){const s=toS(x,z),w=toW(x,z);w0=Math.min(w0,w);w1=Math.max(w1,w);s0=Math.min(s0,s);s1=Math.max(s1,s);}
+function addFader(obj,sc,wc,chunk){obj.updateMatrixWorld(true);const box=new THREE.Box3(),tmp=new THREE.Box3(),R=new THREE.Matrix4().makeRotationY(-Math.PI/4),M=new THREE.Matrix4();
+  const v=new THREE.Vector3();obj.traverse(m=>{if(!m.isMesh)return;M.multiplyMatrices(R,m.matrixWorld);const P=m.geometry.attributes.position;for(let i=0;i<P.count;i++){v.fromBufferAttribute(P,i).applyMatrix4(M);box.expandByPoint(v);}});
+  const h=box.max.y-box.min.y;if(h<3.4)return;const s0=box.min.x,s1=box.max.x,w0=box.min.z,w1=box.max.z;
   const map=new Map();obj.traverse(m=>{if(!m.isMesh)return;let n=map.get(m.material);if(!n){n=m.material.clone();n.transparent=true;map.set(m.material,n);}m.material=n;});FADERS.push({s0,s1,w0,w1,h,mats:[...map.values()],op:1,chunk});}
 function landmarkAt(t,side,dist,obj,r,chunk,face,poi){const yaw=face==='along'?(side>0?Math.PI*1.25:Math.PI/4):face==='front'?-Math.PI/4-side*0.25:-Math.PI/4-side*0.55+(face||0);for(let tr=0;tr<14;tr++){const tt=t+tr*0.3*(tr%2?1:-1);const sc=sAt(tt),wc=meanW(sc)+side*dist;if(distPath(sc,wc)<Math.min(dist-1.2,r+0.9)||!isFree(sc,wc,r*0.6))continue;
     placeLandmark(obj,sc,wc,yaw,chunk,r,poi);return true;}if(!obj.userData.retry){obj.userData.retry=1;return landmarkAt(t,-side,dist,obj,r,chunk,face,poi);}console.warn('landmark failed',t);return false;}
@@ -734,10 +740,9 @@ let STREAM_TEX=null;
 
 /* ---------- cast ---------- */
 const CAST={};
-const CASTLE_SW={s:5.3,w:-4.7};
 function P_(name,o){return Object.assign({name},o);}
 const SPEC={
-  lomaKid:P_('Loma',{sex:'f',age:'child',hair:{c:HAIR.black,s:'curly'},top:0xf2c230,print:0xe8546e,bottom:0x3f6a9a,shoe:0xf6f1e6,unique:true}),
+  lomaKid:P_('Loma',{sex:'f',age:'child',hair:{c:HAIR.black,s:'curlyLong',len:0.58},top:0xf2c230,print:0xe8546e,bottom:0x3f6a9a,shoe:0xf6f1e6,unique:true}),
   lomaAdult:P_('Loma',{sex:'f',age:'adult',hair:{c:HAIR.black,s:'curlyLong'},top:0xd8546e,bottom:0x2f4a6a,unique:true}),
   jordi:P_('Jordi',{sex:'m',age:'child',h:1.08,hair:{c:HAIR.lbrown,s:'short'},top:0x3a7fc2,bottom:0x3b4a5e,unique:true}),
   vicentica:P_('Vicentica',{sex:'f',age:'senior',h:0.9,hair:{c:HAIR.white,s:'bob'},top:0x4a3a4a,dress:true,shoe:0x2a2020}),
@@ -769,8 +774,8 @@ const GLABELS=[];
 function andJoin(a){return a.length<2?a[0]:a.slice(0,-1).join(', ')+' i '+a[a.length-1];}
 function addGroup(members,t,side,chunk){const n=members.length;const ps=members.map(([nm,o],q)=>addNPC(P_(nm,o),t,side,2.3,(q-(n-1)/2)*0.95,chunk));
   let cx=0,cz=0;for(const P of ps){cx+=P.root.position.x;cz+=P.root.position.z;}cx/=n;cz/=n;const text=andJoin(members.map(m=>m[0]));const L=labelTex(text);
-  const m=new THREE.SpriteMaterial({map:L.t,transparent:true,opacity:0,depthWrite:false,depthTest:false});const sp=new THREE.Sprite(m);const w=Math.min(5.4,0.19*text.length+1.0);sp.scale.set(w,w*L.aspect,1);sp.renderOrder=20;
-  const top=Math.max(...ps.map(P=>P.body.scale.y))*1.45*1.95+0.6;sp.position.set(cx,top,cz);CHUNKS[chunk!=null?chunk:biomeAtT(t)].add(sp);GLABELS.push({sp,t});return ps;}
+  const m=new THREE.SpriteMaterial({map:L.t,transparent:true,opacity:0,depthWrite:false,depthTest:false});const sp=new THREE.Sprite(m);const w=Math.min(5.4,0.19*L.chars+1.0);sp.scale.set(w,w*L.aspect,1);sp.renderOrder=20;
+  const top=Math.max(...ps.map(P=>P.body.scale.y))*1.45*1.95+0.6;sp.position.set(cx,top+w*L.aspect/2-0.4,cz);CHUNKS[chunk!=null?chunk:biomeAtT(t)].add(sp);GLABELS.push({sp,t});return ps;}
 function buildCast(){
   // heroes
   CAST.lomaKid=makePerson(SPEC.lomaKid);CAST.lomaAdult=makePerson(SPEC.lomaAdult);CAST.jordi=makePerson(SPEC.jordi);
@@ -827,7 +832,7 @@ function populate(){
   const PINE=()=>[0x6e4a2e,pick([0x3f6a3a,0x4a7440,0x3a5f34]),pick([0x527f46,0x46703e])];
   const HOUSE=()=>[pick([0xf6f1e6,0xefe6d4,0xf3e9d8,0xe9dcc4]),pick([0xc2553a,0xb24a32,0xcc6a46]),pick([0x2f6f8f,0x3a7a5a,0x6e4a2e])];
   // Cocentaina: a stone village in the mountains, with the castle on its hill
-  {const sc=CASTLE_SW.s,wc=CASTLE_SW.w;placeLandmark(makeCastleHill(),sc,wc,-Math.PI/4+0.25,0,4.3,1.4);}
+  {const sc=CASTLE_SW.s,wc=CASTLE_SW.w;placeLandmark(makeCastleHill(),sc,wc,-Math.PI/4+0.15,0,4.3,1.4);POIS[POIS.length-1].back=14;}
   const STONE=()=>[pick([0xb9ad98,0xa89c86,0xc4b8a2,0x9f9584,0xb2a690]),pick([0xa04a32,0x8e4a36,0xb05a3e,0x9a5a40]),pick([0x5a3a22,0x4a3a2e,0x2f4a5e,0x3a5a3a]),pick([0xd8cfbe,0x8f8676])];
   scatter(0,'pine',0.035,3.0,40,0.8,1.3,PINE,0,0.9);scatter(0,'olive',0.025,2.4,40,0.85,1.3,OLIVE,0,0.8);scatter(0,'almond',0.015,2.4,40,0.8,1.2,()=>[0x6e4a2e,pick([0xf6d6e2,0xf2c8d8,0xfbe4ec]),0xffffff],0,0.8);
   scatter(0,'crag',0.022,3.2,40,0.6,1.5,()=>[pick([0x9a9284,0x8a8276,0xa8a092]),pick([0x7f786c,0x938b7e]),0x6f8a48],0,1.0);
@@ -979,21 +984,26 @@ function resize(){const r=$('app').getBoundingClientRect();vw=Math.max(1,r.width
 window.addEventListener('resize',resize);resize();
 function updateCamera(dt,t,zoom){
   const aspect=vw/vh,portrait=aspect<0.95,sinE=Math.sin(ISO_E),cosE=Math.cos(ISO_E);
-  let hT=Math.max(15.5,12/aspect);if(G.state==='title'&&!portrait)hT=Math.max(hT,25);hT*=lerp(1,portrait?0.66:0.85,zoom);
+  let hT=Math.max(15.5,12/aspect);if(G.state==='title')hT=portrait?hT*1.5:Math.max(hT,25);hT*=lerp(1,portrait?0.66:0.85,zoom);
   if(!camInit||camH<=0)camH=hT;camH+=(hT-camH)*(1-Math.exp(-dt*2.2));
   const s=toS(CH.x,CH.z),w=toW(CH.x,CH.z);const wC=lerp(meanW(s),w,0.32);
-  let fy=portrait?-0.17:-0.1;if(G.state==='title')fy=portrait?0.02:-0.16;
+  let fy=portrait?-0.17:-0.1;if(G.state==='title')fy=portrait?0.05:-0.16;
   const ahead=-fy*camH/sinE;
   let wP=wC;
   if(G.state!=='win'){const half=camH*aspect/2;let acc=0,ws=0;
-    let kmax=0;for(const P of POIS){if(!P.k)continue;const d=P.s-s;if(d<-5||d>20)continue;const k=smooth(-5,-1,d)*(1-smooth(13,20,d))*P.k;if(k<=0)continue;acc+=k*(P.w-wC);ws+=k;kmax=Math.max(kmax,k);}
+    let kmax=0;for(const P of POIS){if(!P.k)continue;const d=P.s-s,bk=P.back||5;if(d<-bk||d>20)continue;const k=smooth(-bk,-bk+4,d)*(1-smooth(13,20,d))*P.k;if(k<=0)continue;acc+=k*(P.w-wC);ws+=k;kmax=Math.max(kmax,k);}
     if(ws>0)wP=wC+0.9*(acc/ws)*Math.min(1,ws);
+    if(G.state==='title'&&!portrait)wP=w+0.23*camH*aspect; // hero to the left of the title card
     // the hero and the path of the next seconds always stay inside the view
     let lo,hi;
     if(G.state==='title'||inFlight(t)){lo=w-(half-1.4);hi=w+(half-1.4);}
     else{let a=w,b=w;for(let k=1;k<=10;k++){const pw=pathW(t+k*0.25);if(pw<a)a=pw;if(pw>b)b=pw;}
       lo=b-(half-0.75);hi=a+(half-0.75);if(lo>hi){const m=clamp((lo+hi)/2,w-(half-1.6),w+(half-1.6));lo=hi=m;}}
-    if((G.state==='playing'||G.state==='debug')&&kmax<0.5)for(const r of SIGNS){if(r.act>0.3&&r.grp.visible){const sw=toW(r.grp.position.x,r.grp.position.z);const sl=sw+r.hw-(half-0.15),sh=sw-r.hw+(half-0.15);
+    // name labels of the people waving must fit on screen: they win over lyric signs and landmarks
+    const labs=(G.state==='playing'||G.state==='debug')?GLABELS.filter(L=>L.sp.visible&&L.sp.material.opacity>0.3).sort((p,q)=>q.t-p.t):[];
+    labs.forEach((L,i)=>{const lw=toW(L.sp.position.x,L.sp.position.z),hw=L.sp.scale.x/2+0.3;const a1=Math.max(lo,lw+hw-half),b1=Math.min(hi,lw-hw+half);if(a1<=b1){lo=a1;hi=b1;wP=clamp(wP,lo,hi);}else if(i===0)wP=lw>wC?hi:lo;});
+    if(labs.length){}
+    else if((G.state==='playing'||G.state==='debug')&&kmax<0.5)for(const r of SIGNS){if(r.act>0.3&&r.grp.visible){const sw=toW(r.grp.position.x,r.grp.position.z);const sl=sw+r.hw-(half-0.15),sh=sw-r.hw+(half-0.15);
       if(Math.max(lo,sl)<=Math.min(hi,sh))wP=clamp(wP,Math.max(lo,sl),Math.min(hi,sh));else wP=sw>wC?hi:lo;break;}}
     wP=clamp(wP,lo,hi);}
   camPan+=(wP-camPan)*(1-Math.exp(-dt*2.4));if(!camInit)camPan=wP;
