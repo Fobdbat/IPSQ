@@ -33,7 +33,7 @@ html,body{height:100%;margin:0;background:#f4e9d6;color:var(--ink);font-family:v
 #btnPause{pointer-events:auto;width:40px;height:40px;border:0;border-radius:50%;background:rgba(251,244,232,.94);box-shadow:0 1px 0 rgba(58,38,32,.2);display:grid;place-items:center;cursor:pointer;padding:0;}
 #btnPause span{display:block;width:12px;height:14px;border-left:4px solid var(--ink);border-right:4px solid var(--ink);box-sizing:border-box;}
 button:focus-visible,a:focus-visible,.switch input:focus-visible+span{outline:3px solid var(--rose);outline-offset:2px;}
-.section-label{position:absolute;left:50%;top:calc(74px + env(safe-area-inset-top,0px));transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:0;white-space:nowrap;opacity:0;transition:opacity .6s;pointer-events:none;}
+.section-label{position:absolute;left:50%;top:calc(74px + env(safe-area-inset-top,0px));transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:0;white-space:nowrap;opacity:0;transition:opacity .6s;pointer-events:none;padding:4px 18px 7px;border-radius:18px;background:rgba(58,38,32,.3);}
 .section-label b{font-family:var(--display);font-weight:700;font-size:clamp(26px,7vw,40px);color:#fffaf2;text-shadow:0 2px 0 rgba(58,38,32,.45),0 0 18px rgba(58,38,32,.35);letter-spacing:.01em;}
 .section-label i{font-family:var(--hand);font-style:normal;font-weight:700;font-size:clamp(19px,5vw,25px);color:#fff1dc;text-shadow:0 1px 0 rgba(58,38,32,.5),0 0 12px rgba(58,38,32,.35);}
 .section-label.on{opacity:1;}
@@ -439,6 +439,7 @@ function posePerson(P,mode,ph,c){const [lL,lR]=P.legs,[aL,aR]=P.arms;P.body.posi
     P.body.position.y=Math.abs(Math.cos(ph))*0.03;}
   else if(mode==='air'){lL.rotation.x=-0.8;lR.rotation.x=0.45;aL.rotation.x=-2.5;aR.rotation.x=-2.3;aL.rotation.z=-0.3;aR.rotation.z=0.3;}
   else if(mode==='trip'){lL.rotation.x=0.4+Math.sin(c*14)*0.5;lR.rotation.x=0.4-Math.sin(c*14)*0.5;aL.rotation.x=-2.6;aR.rotation.x=-2.4;aL.rotation.z=-0.5;aR.rotation.z=0.5;}
+  else if(mode==='cheer'){const s=Math.sin(c*9+P.base*7);lL.rotation.x=-0.45*ph;lR.rotation.x=0.3*ph;aL.rotation.x=-2.75+0.18*s;aR.rotation.x=-2.75-0.18*s;aL.rotation.z=-0.42;aR.rotation.z=0.42;}
   else if(mode==='hug'){lL.rotation.x=0;lR.rotation.x=0;aL.rotation.x=-1.35;aR.rotation.x=-1.35;aL.rotation.z=0.35;aR.rotation.z=-0.35;P.body.position.y=Math.abs(Math.sin(c*3+P.base))*0.03;}
   else{lL.rotation.x=0;lR.rotation.x=0;aL.rotation.x=Math.sin(c*1.7+P.base)*0.05;aR.rotation.x=-Math.sin(c*1.7+P.base)*0.05;aL.rotation.z=-0.06;aR.rotation.z=0.06;P.body.position.y=Math.sin(c*2.2+P.base*3)*0.01;}
   if(P.wave>0.01){const w=P.wave;aR.rotation.x=lerp(aR.rotation.x,-0.2,w);aR.rotation.z=lerp(aR.rotation.z,2.6+Math.sin(c*9+P.base*5)*0.35,w);P.head.rotation.z=lerp(0,0.08*Math.sin(c*4),w);}
@@ -781,6 +782,7 @@ function buildCast(){
   CAST.lomaKid=makePerson(SPEC.lomaKid);CAST.lomaAdult=makePerson(SPEC.lomaAdult);CAST.jordi=makePerson(SPEC.jordi);
   for(const k of['lomaKid','lomaAdult','jordi']){CAST[k].root.scale.setScalar(1.35);scene.add(CAST[k].root);}
   reserveCirc(CASTLE_SW.s,CASTLE_SW.w,4.4);
+  {const o={};idealXZ(T_END,o);const S=SEG[segIndexAt(T_END)];const cs=toS(o.x+S.dx*1.395,o.z+S.dz*1.395),cw=toW(o.x+S.dx*1.395,o.z+S.dz*1.395);reserveRect(cs-11,cs+10,cw-10,cw+10);}
   CAST.lomaAdult.root.visible=false;
   const S=x=>[x.name,x];
   // Cocentaina
@@ -872,14 +874,14 @@ function populate(){
     // the couple stops at C; the banner stands straight up the screen from them, facing the camera
     const cx=o.x+S.dx*1.395,cz=o.z+S.dz*1.395,qx=cx+IS2*1.8,qz=cz-IS2*1.8;
     const sq=new THREE.Mesh(flat(new THREE.CylinderGeometry(7.4,7.6,0.2,28)),lam(0xe8c9a0));sq.position.set(qx,-0.06,qz);sq.receiveShadow=true;CHUNKS[7].add(sq);
-    const bx=cx+IS2*5.0,bz=cz-IS2*5.0;const B=makeBanner();B.g.position.set(bx,0,bz);B.g.rotation.y=-Math.PI/4;CHUNKS[7].add(B.g);Object.assign(BANNER,B,{x:o.x,z:o.z,dx:S.dx,dz:S.dz,yaw,bx,bz});
+    const bx=cx+IS2*5.6,bz=cz-IS2*5.6;const B=makeBanner();B.g.position.set(bx,0,bz);B.g.rotation.y=-Math.PI/4;CHUNKS[7].add(B.g);Object.assign(BANNER,B,{x:o.x,z:o.z,dx:S.dx,dz:S.dz,yaw,bx,bz});
     reserveCirc(toS(qx,qz),toW(qx,qz),8.5);}
 }
 function buildFinalCrowd(){const S=BANNER;const list=[];FAMILY.forEach(g=>g.forEach(([n,o])=>list.push(P_(n,o))));
-  const N=list.length;const cx=S.x+S.dx*1.6,cz=S.z+S.dz*1.6;const px=-S.dz,pz=S.dx;
+  const N=list.length;const cx=S.x+S.dx*1.395,cz=S.z+S.dz*1.395;const px=IS2,pz=IS2,ex=IS2,ez=-IS2;
   list.forEach((sp,i)=>{const row=i%2;const k=Math.floor(i/2);const cnt=Math.ceil(N/2);const u=(k+0.5)/cnt;const ang=lerp(-1.85,1.85,u)+(row?0.08:0);const R=row?4.0:3.2;
-    const x=cx+S.dx*Math.cos(ang)*R+px*Math.sin(ang)*R,z=cz+S.dz*Math.cos(ang)*R+pz*Math.sin(ang)*R;
-    const P=makePerson(sp);P.root.scale.setScalar(1.45);P.root.position.set(x,0,z);P.root.rotation.y=Math.atan2(cx-x,cz-z);mergePerson(P,true,'all');CHUNKS[7].add(P.root);P.crowd=true;P.ph=rng()*6;P.home={x,z,yaw:P.root.rotation.y,row,ang};CROWD.push(P);});
+    const x=cx+ex*Math.cos(ang)*R+px*Math.sin(ang)*R,z=cz+ez*Math.cos(ang)*R+pz*Math.sin(ang)*R;
+    const P=makePerson(sp);P.root.scale.setScalar(1.45);P.root.position.set(x,0,z);P.root.rotation.y=Math.atan2(cx-x,cz-z);mergePerson(P,true,'all');CHUNKS[7].add(P.root);P.crowd=true;P.ph=rng()*6;P.jo=rng()*0.22;P.home={x,z,yaw:P.root.rotation.y,row,ang};CROWD.push(P);});
   // hug slots around the couple (where they stop after the kiss)
   const C={x:S.x+S.dx*1.395,z:S.z+S.dz*1.395};const ux=IS2,uz=-IS2,vx=IS2,vz=IS2;const LAY=[{r:1.25,n:7,sp:1.3},{r:1.95,n:9,sp:1.35},{r:2.65,n:Math.max(7,N-16),sp:1.25}];const slots=[];
   LAY.forEach((L,li)=>{for(let i=0;i<L.n;i++){const a=L.n<2?0:lerp(-L.sp,L.sp,i/(L.n-1));slots.push({a,li,x:C.x+ux*Math.cos(a)*L.r+vx*Math.sin(a)*L.r,z:C.z+uz*Math.cos(a)*L.r+vz*Math.sin(a)*L.r,cx:C.x,cz:C.z,used:false});}});
@@ -896,6 +898,10 @@ populate();buildGests();buildFlags();buildInstances();buildStuds();buildFinalCro
 const GROW=[];{for(let k=0;k<10;k++){const t=186.5+k*0.75,side=k%2?1:-1;const sp=sideSpot(t,side,rand(2.2,3.4));const s=toS(sp.x,sp.z),w=toW(sp.x,sp.z);if(!isFree(s,w,0.6))continue;reserveCirc(s,w,0.7);
   const g=NG();mesh(GEO.cyl6,0x7a5a3a,[0,0.6,0],[0.1,1.2,0.1],g);const cr=mesh(GEO.ico1,0x5f9a3e,[0,1.45,0],[0.75,0.6,0.7],g);const fr=[];for(let q=0;q<6;q++){const a=q/6*6.28;fr.push(mesh(GEO.sphere,new THREE.MeshLambertMaterial({color:0x8ac24a}),[Math.cos(a)*0.55,1.3+Math.sin(q*2.1)*0.25,Math.sin(a)*0.5],[0.1,0.1,0.1],g));}
   g.position.set(sp.x,groundY(s,w)-0.03,sp.z);g.scale.setScalar(0.15);CHUNKS[6].add(g);GROW.push({g,fr,t0:t-3});}}
+
+const LOMA_TAG=(()=>{const L=labelTex('Loma');const sp=new THREE.Sprite(new THREE.SpriteMaterial({map:L.t,transparent:true,opacity:0,depthWrite:false,depthTest:false}));const w=1.9;sp.scale.set(w,w*L.aspect,1);sp.renderOrder=21;sp.visible=false;scene.add(sp);return sp;})();
+function updateLomaTag(t){const on=(G.state==='playing'||G.state==='debug')&&t<2.6;const L=CAST.lomaKid;if(!on||!L.root.visible){LOMA_TAG.visible=false;return;}
+  const op=smooth(0.0,0.25,t)*(1-smooth(2.1,2.5,t));LOMA_TAG.visible=op>0.01;LOMA_TAG.material.opacity=op;LOMA_TAG.position.set(L.root.position.x,L.root.position.y+2.55,L.root.position.z);}
 
 /* ---------- particles & footprints ---------- */
 const PMAX=700;const pMesh=new THREE.InstancedMesh(GEO.ico0,new THREE.MeshBasicMaterial({color:0xffffff}),PMAX);pMesh.frustumCulled=false;pMesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);scene.add(pMesh);
@@ -943,7 +949,8 @@ function tap(){if(G.state!=='playing')return;const t=songTime();if(G.auto||t<G.c
   const i=G.next;if(i<EV.length&&Math.abs(t-EV[i].t)<=GOOD){doEvent(i,t,true);return;}
   charPos(t,CH);const S=SEG[G.k];const nd=S.d^1;startFail(t,'slip',DIRV[nd][0],DIRV[nd][1]);}
 function startFail(t,kind,dx,dz){charPos(t,CH);if(dx===undefined){dx=CH.dx;dz=CH.dz;}G.state='failing';G.fail={t,kind,x:CH.x,z:CH.z,dx,dz,y:CH.y,clock:0,start:performance.now(),shown:false};stopAudio(0.35);G.yawTarget=Math.atan2(dx,dz);}
-function startWin(){G.state='win';G.winClock=0;G.winStart=performance.now();G.endShown=false;G.burst=false;}
+const W_JUMP=242.57-T_END, W_HUG=W_JUMP+1.4, W_CARD=255.0-T_END; // song-time phases of the ending
+function startWin(){G.state='win';G.winClock=0;G.winStart=performance.now();G.endShown=false;G.burst=false;G.burst2=false;G.cardAt=W_CARD;G.winAudio=!!src;}
 function lastCheckpoint(t){let c=0;for(const cp of CHECKPOINTS)if(cp<=t-0.4)c=cp;return c;}
 function placeName(t){const f=flightIdx(t,0.3,0);if(f>=0)return f===0?'Volant cap a Lagos':'Volant cap a Igualada';return BIO[biomeAtT(t)].name;}
 const stars=new THREE.Group();for(let k=0;k<5;k++){const s=new THREE.Mesh(new THREE.OctahedronGeometry(0.11,0),new THREE.MeshBasicMaterial({color:0xffe2a6}));s.position.set(Math.cos(k*1.256)*0.42,0,Math.sin(k*1.256)*0.42);stars.add(s);}stars.visible=false;scene.add(stars);
@@ -953,7 +960,7 @@ const $=id=>document.getElementById(id);
 const ui={hud:$('hud'),title:$('title'),pause:$('pause'),fail:$('fail'),end:$('end'),prog:$('progFill'),place:$('place'),gests:$('gests'),section:$('section'),hint:$('hint'),cap:$('caption'),capSpan:document.querySelector('#caption span'),auto:$('autoBadge'),judge:$('judgeLayer'),glow:$('glow')};
 function hideAll(){for(const k of['title','pause','fail','end'])ui[k].hidden=true;}
 function showHud(v){ui.hud.hidden=!v;}
-let secTimer=0;function showSection(name,sub){$('secName').textContent=name;$('secSub').textContent=sub||'';ui.section.classList.add('on');clearTimeout(secTimer);secTimer=setTimeout(()=>ui.section.classList.remove('on'),2800);}
+let secTimer=0;function showSection(name,sub,ms){$('secName').textContent=name;$('secSub').textContent=sub||'';ui.section.classList.add('on');clearTimeout(secTimer);secTimer=setTimeout(()=>ui.section.classList.remove('on'),ms||2800);}
 let hintTimer=0;function showHint(txt,ms){ui.hint.textContent=txt;ui.hint.classList.add('on');clearTimeout(hintTimer);hintTimer=setTimeout(()=>ui.hint.classList.remove('on'),ms||2400);}
 function judge(txt,perf){const el=document.createElement('div');el.className='judge'+(perf?' perfect':'');el.textContent=txt;_v.set(CH.x,CH.y+2.4,CH.z).project(camera);el.style.left=((_v.x+1)/2*100)+'%';el.style.top=((1-_v.y)/2*100)+'%';ui.judge.appendChild(el);setTimeout(()=>el.remove(),720);}
 function syncOpts(){$('optAuto').checked=$('optAuto2').checked=G.auto;$('optCap').checked=$('optCap2').checked=G.cap;ui.auto.hidden=!G.auto;$('syncVal').textContent=(syncMs>0?'+':'')+syncMs+' ms';}
@@ -972,7 +979,7 @@ $('btnRetry0').addEventListener('click',()=>{actx.resume();G.attempts++;G.usedAu
 $('btnPause').addEventListener('click',e=>{e.stopPropagation();pause();});
 function pause(){if(G.state!=='playing')return;G.pausedT=songTime();stopAudio(0.08);G.state='paused';syncOpts();ui.pause.hidden=false;}
 document.addEventListener('visibilitychange',()=>{if(document.hidden)pause();});
-$('app').addEventListener('pointerdown',e=>{if(e.target.closest('.overlay,button,label,a'))return;if(G.state==='playing'){e.preventDefault();tap();}});
+$('app').addEventListener('pointerdown',e=>{if(e.target.closest('.overlay,button,label,a'))return;if(G.state==='playing'){e.preventDefault();tap();}else if(G.state==='win'&&!G.endShown&&G.winClock>2)G.cardAt=Math.min(G.cardAt,G.winClock+0.4);});
 window.addEventListener('keydown',e=>{if(e.code==='Space'||e.code==='ArrowUp'||e.code==='ArrowLeft'||e.code==='ArrowRight'){if(G.state==='playing'){e.preventDefault();if(!e.repeat)tap();}}else if(e.code==='Escape'||e.code==='KeyP'){if(G.state==='playing')pause();}});
 syncOpts();
 
@@ -1009,7 +1016,7 @@ function updateCamera(dt,t,zoom){
   camPan+=(wP-camPan)*(1-Math.exp(-dt*2.4));if(!camInit)camPan=wP;
   const back=new THREE.Vector3(-UVEC.x,0,-UVEC.z).applyAxisAngle(THREE.Object3D.DefaultUp,camOrbit);
   let o;
-  if(G.state==='win'){const late=smooth(5.6,7.2,G.winClock);const f=portrait?lerp(1.8,-(0.05*camH+0.7)/sinE,late):lerp(1.8,0.6,late);const sx=portrait?0:late*0.3*camH*aspect;o={x:CH.x-back.x*f+back.z*sx,z:CH.z-back.z*f-back.x*sx};}
+  if(G.state==='win'){const late=smooth(G.cardAt-1.2,G.cardAt+0.4,G.winClock);const f=portrait?lerp(0.7,-(0.05*camH+0.7)/sinE,late):lerp(1.6,0.6,late);const sx=portrait?0:late*0.3*camH*aspect;o={x:CH.x-back.x*f+back.z*sx,z:CH.z-back.z*f-back.x*sx};}
   else o=fromSW(s+ahead,camPan,{});
   const cy=CH.y*0.85-CH.lift*0.6;
   if(!camInit){camT.set(o.x,cy,o.z);camInit=true;}
@@ -1081,7 +1088,7 @@ function updateWorld(t,dt){
   for(const P of NPCS){const d=Math.abs(t-P.t);const vis=d<16;P.root.visible=vis;if(!vis)continue;const near=t>P.t-2.4&&t<P.t+1.6;P.wave+=((near?1:0)-P.wave)*(1-Math.exp(-dt*5));posePerson(P,'idle',0,clock);
 }
   for(const L of GLABELS){const lo=smooth(L.t-3.2,L.t-2.2,t)*(1-smooth(L.t+1.4,L.t+2.4,t));L.sp.material.opacity=lo;L.sp.visible=lo>0.01;}
-  updateParade(t);
+  updateParade(t);updateLomaTag(t);
   // see-through when a building stands between the camera and the hero
   {const sc=toS(CH.x,CH.z),wc=toW(CH.x,CH.z),yc=CH.y;for(const F of FADERS){if(!CHUNKS[F.chunk].visible)continue;const occ=wc>F.w0-0.7&&wc<F.w1+0.7&&sc>F.s0-0.3&&(sc-F.s1)<(F.h-yc)/TAN_E+1.2;const tg=occ&&G.state!=='title'?0.28:1;if(Math.abs(tg-F.op)<0.004)continue;F.op+=(tg-F.op)*(1-Math.exp(-dt*6));for(const m of F.mats)m.opacity=F.op;}}
   for(const Pl of PLANES){const F=Pl.F,g=Pl.pl.g;const vis=t>F.t0-12&&t<F.t1+9;g.visible=vis;if(!vis)continue;let tt;
@@ -1093,9 +1100,11 @@ function updateWorld(t,dt){
   // warmth of the pyjama on the radiator
   const wk=smooth(69.4,70.6,t)*(1-smooth(76.6,78.2,t));ui.glow.style.opacity=(wk*0.55).toFixed(3);
   if(BANNER.bulbs){const on=smooth(T_END-12,T_END-6,t);BANNER.bulbs.forEach((b,i)=>b.material.color.setHex(mixHex(0x8a7a6a,(Math.sin(clock*3+i)>0?0xffe2a0:0xffc46a),on)));}
-  if(G.state==='win'){const wc=G.winClock;for(const P of CROWD){const H=P.home,S=P.slot;const t0=1.45+P.delay;const k=smooth(t0,t0+1.7,wc);
-      const x=lerp(H.x,S.x,k),z=lerp(H.z,S.z,k);P.root.position.set(x,0.12,z);P.root.rotation.y=k>0?Math.atan2(S.cx-x,S.cz-z):H.yaw;P.wave=0;
-      if(k>0&&k<1)posePerson(P,'walk',clock*8+P.ph,clock);else if(k>=1)posePerson(P,'hug',0,clock+P.ph);else{P.wave=smooth(0.5,1.0,wc);posePerson(P,'idle',0,clock+P.ph);}}}
+  if(G.state==='win'){const wc=G.winClock,bp=(t-OFF)/BEAT;for(const P of CROWD){const H=P.home,S=P.slot;const t0=W_HUG+P.delay;const k=smooth(t0,t0+1.7,wc);
+      const x=lerp(H.x,S.x,k),z=lerp(H.z,S.z,k);P.wave=0;P.root.rotation.y=k>0?Math.atan2(S.cx-x,S.cz-z):H.yaw;
+      // jump for joy on the beat until the hug
+      const jk=smooth(0.6,1.2,wc)*(1-smooth(W_JUMP-0.5,W_JUMP,wc));const hop=jk>0?Math.abs(Math.sin(Math.PI*(bp+P.jo)))*0.42*jk:0;P.root.position.set(x,0.12+hop,z);
+      if(k>0&&k<1)posePerson(P,'walk',clock*8+P.ph,clock);else if(k>=1)posePerson(P,'hug',0,clock+P.ph);else if(jk>0.05)posePerson(P,'cheer',hop/0.42,clock+P.ph);else{P.wave=smooth(0.3,0.6,wc);posePerson(P,'idle',0,clock+P.ph);}}}
   else if(CHUNKS[7].visible)for(const P of CROWD){P.root.position.set(P.home.x,0.12,P.home.z);P.root.rotation.y=P.home.yaw;P.wave=0.6;posePerson(P,'idle',0,clock+P.ph);}
   for(const f of ANIM)f(clock);
 }
@@ -1115,16 +1124,28 @@ function frame(now){requestAnimationFrame(frame);const dt=Math.min(0.05,(now-las
       const M={slip:['Ensopegada!',"Gira just quan soni el cop. L'última bandera et guarda el lloc."],gap:['Al rierol!',"Quan el camí s'interromp, toca per saltar amb el cop."]}[F.kind];
       const cp=lastCheckpoint(F.t);$('btnRetryCp').textContent=cp>0?'Continua des de la bandera':'Torna-hi';$('btnRetry0').hidden=cp<=0;$('failTitle').textContent=M[0];$('failLede').textContent=M[1];ui.fail.hidden=false;}
     updateCamera(dt,t,0);updateWorld(t,dt);updateParticles(dt);updateHearts(dt);if(!NORENDER)renderer.render(scene,camera);return;}
-  else if(G.state==='win'){const pw=G.winClock;G.winClock=(now-G.winStart)/1000;const wc=G.winClock;t=T_END+wc;zoom=0.5*smooth(0,3,wc)+0.5*smooth(5.6,7.2,wc);camOrbit=lerp(0,0.14,smooth(0.5,5,wc));
+  else if(G.state==='win'){const pw=G.winClock;G.winClock=G.winAudio&&src?songTime()-T_END:(now-G.winStart)/1000;const wc=G.winClock;t=T_END+wc;
+    const late=smooth(G.cardAt-1.2,G.cardAt+0.4,wc);zoom=0.55*smooth(0,3,wc)+0.15*smooth(W_HUG,W_HUG+3,wc)+0.3*late;camOrbit=0.1*Math.sin(wc*0.22)*smooth(1,5,wc);
     const walk=Math.min(wc,0.5);CH.x=BANNER.x+BANNER.dx*walk*V*0.62;CH.z=BANNER.z+BANNER.dz*walk*V*0.62;CH.y=0;CH.lift=0;G.yaw=BANNER.yaw;
-    const J=CAST.jordi,LA=CAST.lomaAdult;const px=-BANNER.dz,pz=BANNER.dx;const face=smooth(0.6,1.3,wc);
-    const dd=lerp(0.43,0.34,face);placeP(J,CH.x+px*dd,0,CH.z+pz*dd,G.yaw-face*Math.PI/2);placeP(LA,CH.x-px*dd,0,CH.z-pz*dd,G.yaw+face*Math.PI/2);CAST.lomaKid.root.visible=false;
-    J.holdL=wc<0.6?0.25:0;LA.hold=wc<0.6?0.25:0;const hug=wc>1.15;posePerson(J,wc<0.5?'walk':hug?'hug':'idle',Math.PI*2*(t-OFF)/(BEAT*2),clock);posePerson(LA,wc<0.5?'walk':hug?'hug':'idle',Math.PI*2*(t-OFF)/(BEAT*2),clock);
-    const kiss=smooth(1.2,1.8,wc);J.body.rotation.x=0.06*kiss;LA.body.rotation.x=0.06*kiss;J.head.rotation.x=0.08*kiss;LA.head.rotation.x=0.08*kiss;
-    if(!G.burst&&wc>0.75){G.burst=true;for(let i=0;i<18;i++){const a=rng()*6.28,r=rand(0.3,3.2);heart(CH.x+Math.cos(a)*r,rand(1.6,3.4),CH.z+Math.sin(a)*r,rand(0.8,1.6));}}
-    if(wc>1.6&&Math.floor(wc/0.3)!==Math.floor(pw/0.3))heart(CH.x+rand(-1.2,1.2),rand(2.2,3.4),CH.z+rand(-1.2,1.2),rand(0.8,1.4));
+    const J=CAST.jordi,LA=CAST.lomaAdult;CAST.lomaKid.root.visible=false;const px=-BANNER.dz,pz=BANNER.dx,vx=IS2,vz=IS2;
+    // arrive -> side by side facing the camera -> turn to each other for the kiss
+    const k1=smooth(0.5,1.1,wc),kf=smooth(W_JUMP,W_JUMP+0.6,wc),off=lerp(0.45,0.34,kf);
+    const yJ=lerpAngle(lerpAngle(G.yaw,-Math.PI/4,k1),-Math.PI*0.75,kf),yL=lerpAngle(lerpAngle(G.yaw,-Math.PI/4,k1),Math.PI/4,kf);
+    const bp=(t-OFF)/BEAT,jk=smooth(1.0,1.5,wc)*(1-smooth(W_JUMP-0.5,W_JUMP,wc)),hop=Math.abs(Math.sin(Math.PI*bp))*0.36*jk;
+    placeP(J,lerp(CH.x+px*0.43,CH.x+vx*off,k1),hop,lerp(CH.z+pz*0.43,CH.z+vz*off,k1),yJ);placeP(LA,lerp(CH.x-px*0.43,CH.x-vx*off,k1),hop,lerp(CH.z-pz*0.43,CH.z-vz*off,k1),yL);
+    J.holdL=0;LA.hold=0;J.hold=0;LA.holdL=0;J.lean=0;LA.lean=0;
+    const hug=wc>W_JUMP+0.7,ph=Math.PI*2*(t-OFF)/(BEAT*2);
+    if(wc<0.5){J.holdL=0.25;LA.hold=0.25;posePerson(J,'walk',ph,clock);posePerson(LA,'walk',ph,clock);}
+    else if(jk>0.05){posePerson(J,'cheer',hop/0.36,clock);posePerson(LA,'cheer',hop/0.36,clock+1);}
+    else{posePerson(J,hug?'hug':'idle',0,clock);posePerson(LA,hug?'hug':'idle',0,clock);}
+    const kiss=smooth(W_JUMP+0.6,W_JUMP+1.2,wc);J.body.rotation.x=0.06*kiss;LA.body.rotation.x=0.06*kiss;J.head.rotation.x=0.08*kiss;LA.head.rotation.x=0.08*kiss;
+    if(!G.burst&&wc>0.6){G.burst=true;for(let i=0;i<18;i++){const a=rng()*6.28,r=rand(0.3,3.2);heart(CH.x+Math.cos(a)*r,rand(1.6,3.4),CH.z+Math.sin(a)*r,rand(0.8,1.6));}}
+    // while they jump: a heart and a little confetti on every beat
+    if(jk>0.2&&Math.floor(bp)!==Math.floor((T_END+pw-OFF)/BEAT)){const P=pick(CROWD);heart(P.root.position.x,rand(2.6,3.4),P.root.position.z,rand(0.6,1.0));burst(CH.x+rand(-3,3),3.2,CH.z+rand(-3,3),8,[0xe8546e,0xffd24a,0xffffff,0x5fa8d8,0x7ac36a],1.4,1.2,0.07,1.1,2.2);}
+    if(!G.burst2&&kiss>0.5){G.burst2=true;for(let i=0;i<12;i++)heart(CH.x+rand(-0.6,0.6),rand(2.0,3.0),CH.z+rand(-0.6,0.6),rand(0.9,1.6));}
+    if(wc>W_HUG+1.5&&Math.floor(wc/0.3)!==Math.floor(pw/0.3))heart(CH.x+rand(-1.4,1.4),rand(2.2,3.4),CH.z+rand(-1.4,1.4),rand(0.8,1.4));
     endLight.intensity=smooth(1,2.5,wc)*1.6;endLight.position.set(lerp(CH.x,BANNER.bx,0.6),3.2,lerp(CH.z,BANNER.bz,0.6));
-    if(!G.endShown&&wc>6.6){G.endShown=true;$('stGests').textContent=GESTS.filter(n=>n.got).length+'/'+GESTS.length;$('stPerf').textContent=(G.auto?'—':Math.round(G.perfect/Math.max(1,G.judged)*100)+'%');$('stTries').textContent=G.attempts;ui.end.hidden=false;showHud(false);}
+    if(!G.endShown&&wc>G.cardAt){G.endShown=true;$('stGests').textContent=GESTS.filter(n=>n.got).length+'/'+GESTS.length;$('stPerf').textContent=(G.auto?'—':Math.round(G.perfect/Math.max(1,G.judged)*100)+'%');$('stTries').textContent=G.attempts;ui.end.hidden=false;showHud(false);}
     setGray(Math.max(grayK,0.55));
     updateCamera(dt,t,zoom);updateWorld(t,dt);updateParticles(dt);updateHearts(dt);if(!NORENDER)renderer.render(scene,camera);return;}
   else if(G.state==='debug'){t=G.dbgT;G.k=turnsBefore(t);G.errx=G.errz=0;JUMP_TAPS.clear();for(const e of EV)if(e.kind==='jump'&&e.t<=t)JUMP_TAPS.set(e.j,e.t);charPos(t,CH);mode=CH.lift>0.05?'air':'walk';G.yaw=Math.atan2(CH.dx,CH.dz);}
@@ -1153,7 +1174,8 @@ function step(t,dt){
   if(tc>212.4&&tc<218&&rng()<0.08)heart(CH.x+rand(-0.6,0.6),CH.y+2.4,CH.z+rand(-0.6,0.6),rand(0.6,1.0));
   const b=biomeAtT(tc);if(b!==G.lastBiome){if(G.lastBiome>=0&&BIO[b].name)showSection(BIO[b].name,BIO[b].sub);G.lastBiome=b;}
   if(!G.auto){const J0=JUMPS.find(tj=>G.lastT<tj-2.2&&tc>=tj-2.2);if(J0!=null&&!G.hinted.jump){G.hinted.jump=1;showHint('El camí s’interromp: toca per saltar',2600);}
-    const F0=FLIGHTS.find(F=>G.lastT<F.t0-1.8&&tc>=F.t0-1.8);if(F0&&!G.hinted['f'+F0.t0]){G.hinted['f'+F0.t0]=1;showHint(F0===FLIGHTS[0]?'El Jordi agafa un avió cap a Lagos':'Cap a Igualada!',2400);}}
+  }
+  {const F0=FLIGHTS.find(F=>G.lastT<F.t0-1.4&&tc>=F.t0-1.4);if(F0){if(F0===FLIGHTS[0])showSection('Cap a Lagos','El Jordi vola de Cocentaina a Nigèria',4800);else showSection('Cap a Igualada','El Jordi vola de Lagos a Igualada',4800);}}
   G.lastT=tc;
   if(t>=T_END)startWin();
 }
@@ -1168,6 +1190,7 @@ window.__ips={time(){return songTime();},play(t,auto){G.auto=!!auto;G.usedAuto=!
   missing(){return GESTS.filter(n=>!n.got).map(n=>[n.t,n.seg,SEG[n.seg].t0,SEG[n.seg].t1]);},
   stats(){return{state:G.state,t:actx?songTime():0,perfect:G.perfect,judged:G.judged,gests:GESTS.filter(n=>n.got).length,ng:GESTS.length,fail:G.fail&&[G.fail.kind,G.fail.t]};},
   cstats(i){const out={};CHUNKS[i].traverse(o=>{if(!o.isMesh)return;const g=o.geometry;const tr=(g.index?g.index.count:g.attributes.position.count)/3;const n=o.isInstancedMesh?o.count:1;const k=o.isInstancedMesh?('I'+tr):'M';out[k]=(out[k]||0)+tr*n;});return out;},
+  wc(){return G.winClock;},
   pois(){return POIS.map(P=>[+P.s.toFixed(1),+P.w.toFixed(1),+(tAtS(P.s)).toFixed(1),+meanW(P.s).toFixed(1)]);},
   info(){return{turns:TURNS.length,jumps:JUMPS.length,events:EV.length,gests:GESTS.length,signs:SIGNS.length,npcs:NPCS.length,crowd:CROWD.length,cps:CHECKPOINTS,state:G.state,tris:renderer.info.render.triangles,calls:renderer.info.render.calls};}};
 })();
